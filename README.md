@@ -13,3 +13,10 @@
 - [ ] 应用权限生成
 - [ ] 自动编译
 - [ ] 可部署程序生成
+
+## 模块
+- [x] core: https://github.com/yockii/ruomu-core
+- [x] 模块管理: https://github.com/yockii/ruomu-module
+- [x] 用户管理：https://github.com/yockii/ruomu-uc
+- [x] 界面管理：https://github.com/yockii/ruomu-ui
+- [ ] 前端默认主题：开发中……
