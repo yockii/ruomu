@@ -27,6 +27,7 @@ func main() {
 	ruomu_module.Initial()
 	logger.Infoln("模块管理加载完毕")
 
+	server.Static("./public")
 	for {
 		err := server.Start()
 		if err != nil {
