@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://unpkg.com/vue-demi"></script>
+    <script src="https://unpkg.com/pinia"></script>
+    <!-- 循环libList -->
+    {{ range $lib := .libList }}
+      {{ if ne $lib.CdnJsUrl "" }}
+        <script src="{{ $lib.CdnJsUrl }}"></script>
+      {{ end }}
+      {{ if ne $lib.CdnCssUrl "" }}
+        <link rel="stylesheet" href="{{ $lib.CdnCssUrl }}">
+      {{ end }}
+    {{ end }}
+</head>
+<body>
+    <div id="app">
+    </div>
+    <script type="module">
+        import App from './canvas/app.js'
+        import piniaShare from "./canvas/piniaShare.js";
+
+        const { createPinia } = Pinia;
+        const pinia = createPinia()
+        pinia.use(piniaShare)
+
+        const { createApp } = Vue;
+
+        const app = createApp(App)
+        app.use(pinia)
+        {{ range $lib := .libList -}}
+            {{- if ne $lib.PluginUseName "" -}}
+                app.use({{ $lib.PluginUseName | jsVar }})
+            {{- end }}
+        {{- end }}
+        app.mount('#app')
+    </script>
+</body>
+</html>

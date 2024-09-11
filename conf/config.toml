@@ -1,32 +1,32 @@
-userTokenExpire=86400
-
-[server]
-port=8888
-#viewsDir=""
-#viewExtension=".html"
-
-[logger]
-level="debug"
-dir="logs"
-backups=7
-maxSize=100
-maxAge=30
-compress=false
-
-[redis]
-app="ruomu"
-host="127.0.0.1"
-port=6379
-password="123456"
-#maxIdle=50
-#maxActive=100
+modulename = 'ui'
+usertokenexpire = 86400
 
 [database]
-driver="mysql" # sqlite mysql pg postgres
-host="127.0.0.1"
-port=3306
-user="root"
-password="root"
-db="ruomu"
-prefix="t_"
-showSql=true
+db = 'ruomu'
+driver = 'mysql'
+host = '127.0.0.1'
+password = 'root'
+port = 3306
+prefix = 't_'
+showsql = true
+user = 'root'
+
+[logger]
+backups = 7
+compress = false
+dir = 'logs'
+level = 'debug'
+maxage = 30
+maxsize = 100
+
+[project]
+id = 28010609669849088
+
+[redis]
+app = 'ruomu'
+host = '127.0.0.1'
+password = '123456'
+port = 6379
+
+[server]
+port = 8888

@@ -47,7 +47,19 @@ export default defineComponent({
                             }
                         }
                     } else {
-                        // 如果没有children，忽略
+                        // 如果没有children，则给出一个灰色的《请拖动组件到插槽中》的占位框
+                        slotChildren.push(h('div', {
+                            'data-component-slot': `${schema.id}.${slot.name}`,
+                            class: 'rm-slot',
+                            style: {
+                                padding: '10px',
+                                color: '#666',
+                                border: '1px dashed #ccc',
+                                borderRadius: '4px',
+                                textAlign: 'center',
+                                fontSize: '12px'
+                            }
+                        }, `请拖动组件到插槽${slot.name}中`))
                     }
                     children[slot.name] = slotChildren
                 }

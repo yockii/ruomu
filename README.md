@@ -20,3 +20,30 @@
 - [x] 用户管理：https://github.com/yockii/ruomu-uc
 - [x] 界面管理：https://github.com/yockii/ruomu-ui
 - [ ] 前端默认主题：开发中……
+
+## 开发
+开发插件可以使用任意语言，但需以微核core提供的proto`shared/communicate.proto`作为通信协议，可通过protobuf生成语言代码。
+
+go语言可参考ruomu-uc/ruomu-ui,引入core微核进行直接开发。
+
+### GO debug模式
+1. 编译插件时，需使用`go build -gcflags="-N -l"`
+2. 创建debug脚本，如：ruomu-ui.sh，内如参考如下
+3. 安装dlv后，将插件启动命令修改为 `/bin/sh ./plugins/xxxx.sh [--其他参数]`
+4. ide中启动debug模式，选择`Remote`，端口为sh中配置的端口
+
+ruomu-ui.sh:
+```shell
+export TEST_PLUGIN=cookie_value
+#set plugin vars
+export PLUGIN_MIN_PORT=10000
+export PLUGIN_MAX_PORT=25000
+export PLUGIN_PROTOCOL_VERSIONS=1
+
+#make sure plugin output is "original" without debugger messages by passing log-dest & tty arguments
+dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient \
+  --log-dest "dlv.log"  \
+  --tty="" \
+    exec ~/Projects/github.com/yockii/ruomu/plugins/ruomu-ui -- "$@"
+```
+注：启动器启动插件时会阻塞等待debug附加，因此出现插件启动日志后，需启动remote debug，否则不会继续运行。
