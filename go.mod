@@ -6,7 +6,7 @@ require (
 	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/yockii/ruomu-core v0.1.5
-	github.com/yockii/ruomu-module v0.1.6
+	github.com/yockii/ruomu-module v0.1.7
 )
 
 require (

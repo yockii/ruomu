@@ -140,8 +140,8 @@ github.com/valyala/tcplisten v1.0.0 h1:rBHj/Xf+E1tRGZyWIWwJDiRY0zc1Js+CV5DqwacVS
 github.com/valyala/tcplisten v1.0.0/go.mod h1:T0xQ8SeCZGxckz9qRXTfG43PvQ/mcWh7FwZEA7Ioqkc=
 github.com/yockii/ruomu-core v0.1.5 h1:BbCVpgS17qqNwdyLzCyn95834v4EjZm46YFgjwc/vNE=
 github.com/yockii/ruomu-core v0.1.5/go.mod h1:TL776NIrpayk6bda7HhAcZA04IfdZVF32U9RXmyt2Iw=
-github.com/yockii/ruomu-module v0.1.6 h1:ePswHeKHo9GSJQuic2sJvuvaUkPtqsliRxwaMPK8Dd8=
-github.com/yockii/ruomu-module v0.1.6/go.mod h1:03ZhxmnBiav1jYbAczBhiF/IQLubayniOgGkTBjB/8A=
+github.com/yockii/ruomu-module v0.1.7 h1:HX93khQEC07/jqGQhdHRLpiOmcCYZ94H4nbtc/9LjgQ=
+github.com/yockii/ruomu-module v0.1.7/go.mod h1:03ZhxmnBiav1jYbAczBhiF/IQLubayniOgGkTBjB/8A=
 github.com/yockii/snowflake_ext v0.1.0 h1:OGd10s8xeUuNf7e2QvnS2+zqyzo5n9dLkVft5Qn8jT0=
 github.com/yockii/snowflake_ext v0.1.0/go.mod h1:QKkFgINVDidfwYv3F5gAA+K4dfbOtcnzeHessrV5boc=
 go.uber.org/multierr v1.11.0 h1:blXXJkSxSSfBVBlC76pxqeO+LN3aDfLQo+309xJstO0=

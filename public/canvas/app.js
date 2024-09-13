@@ -30,11 +30,10 @@ export default defineComponent({
         const globalComponents = appContext.components;
 
 
-        const render = (schema) => {
-            let children
+        const render = (schema, slotName) => {
+            let children = {}
             if(schema.slots) {
                 // 有插槽，则不是children数组的形式，而是插槽键值对的形式
-                children = {}
                 for (const slot of schema.slots) {
                     const slotChildren = []
                     if (slot.children) {
@@ -43,27 +42,60 @@ export default defineComponent({
                             slotChildren.push(slot.children)
                         } else {
                             for (const node of slot.children) {
-                                slotChildren.push(render(node))
+                                slotChildren.push(render(node, slot.name))
                             }
                         }
-                    } else {
-                        // 如果没有children，忽略
                     }
                     children[slot.name] = slotChildren
                 }
-            } else {
-                children = []
+            }
+            if (schema.children && schema.children.length > 0) {
+                const defaultSlotChildren = []
                 if (schema.children && schema.children.length > 0) {
                     for (const node of schema.children) {
-                        children.push(render(node))
+                        defaultSlotChildren.push(render(node))
                     }
                 }
+                children.default = () => defaultSlotChildren
             }
 
+
+            let shouldShowDropInfo = false
+            let needChildrenPlaceholder = schema.isContainer && (!schema.children || schema.children.length === 0)
+            if (needChildrenPlaceholder && schema.slots) {
+                // 检查是否存在default的slot
+                needChildrenPlaceholder = !schema.slots.some(slot => slot.name === "default" && slot.children && slot.children.length > 0)
+            } else if (schema.slots) {
+                // "default" slot
+                needChildrenPlaceholder = schema.slots.some(slot => slot.name === "default" && (!slot.children || slot.children.length === 0))
+            }
+            if (needChildrenPlaceholder) {
+                shouldShowDropInfo = true
+            }
+            if(shouldShowDropInfo) {
+                children.default = () => [
+                    h('div', {
+                        'data-component-id': schema.id,
+                        class: 'rm-drop-info',
+                        style: {
+                            padding: '10px',
+                            color: '#666',
+                            border: '1px dashed #ccc',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            fontSize: '12px'
+                        }
+                    }, `拖拽组件到此处`)
+                ]
+            }
 
             let props = {
                 ...schema.props,
                 'data-component-id': schema.id,
+            }
+
+            if (slotName) {
+                props['data-component-in-slot'] = slotName
             }
 
             // 如果组件有独立的style属性
@@ -107,7 +139,14 @@ export default defineComponent({
                     children.push(render(node))
                 }
             }
-            return h('div', {}, children)
+            const props = {}
+            if (children.length === 0) {
+                props.style = {
+                    width: '100%',
+                    height: '100%',
+                }
+            }
+            return h('div', props, children)
         }
 
         onMounted(() => {

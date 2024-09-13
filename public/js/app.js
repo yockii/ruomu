@@ -29,12 +29,31 @@ export default defineComponent({
         const { appContext } = getCurrentInstance()
         const globalComponents = appContext.components;
 
+        const fetchProjectPages = async () => {
+            try {
+                const resp = await axios.get("./page/list", {params: {projectId, offset: -1, limit: -1}})
+                projectStore.pages = resp.data.data.items
+
+                fetchPageSchema(projectStore.pages[0].id)
+            } catch (e) {
+                console.error(e)
+            }
+        }
+
+        const fetchPageSchema = async (pageId) => {
+            try {
+                const resp = await axios.get("./page/schema", {params: {pageId}})
+                const schema = resp.data.data
+                projectStore.currentPageSchema = schema
+                projectStore.pages.find(page => page.id === pageId).schema = schema
+            } catch (e) {
+                console.error(e)
+            }
+        }
 
         const render = (schema) => {
-            let children
+            let children = {}
             if(schema.slots) {
-                // 有插槽，则不是children数组的形式，而是插槽键值对的形式
-                children = {}
                 for (const slot of schema.slots) {
                     const slotChildren = []
                     if (slot.children) {
@@ -46,36 +65,22 @@ export default defineComponent({
                                 slotChildren.push(render(node))
                             }
                         }
-                    } else {
-                        // 如果没有children，则给出一个灰色的《请拖动组件到插槽中》的占位框
-                        slotChildren.push(h('div', {
-                            'data-component-slot': `${schema.id}.${slot.name}`,
-                            class: 'rm-slot',
-                            style: {
-                                padding: '10px',
-                                color: '#666',
-                                border: '1px dashed #ccc',
-                                borderRadius: '4px',
-                                textAlign: 'center',
-                                fontSize: '12px'
-                            }
-                        }, `请拖动组件到插槽${slot.name}中`))
                     }
                     children[slot.name] = slotChildren
                 }
-            } else {
-                children = []
+            }
+            if (schema.children && schema.children.length > 0) {
+                const defaultSlotChildren = []
                 if (schema.children && schema.children.length > 0) {
                     for (const node of schema.children) {
-                        children.push(render(node))
+                        defaultSlotChildren.push(render(node))
                     }
                 }
+                children.default = () => defaultSlotChildren
             }
-
 
             let props = {
                 ...schema.props,
-                'data-component-id': schema.id,
             }
 
             // 如果组件有独立的style属性
@@ -98,16 +103,6 @@ export default defineComponent({
             } else {
                 result = h(schema.tagName, props, children)
             }
-            // 附加 rm-node class
-            if (result.props?.class) {
-                result.props.class = result.props.class + ' rm-node'
-            } else {
-                if (result.props) {
-                    result.props.class = 'rm-node'
-                } else {
-                    result.props = { class: 'rm-node' }
-                }
-            }
 
             return result
         }
@@ -123,8 +118,7 @@ export default defineComponent({
         }
 
         onMounted(() => {
-            // innerCanvasReady event
-            window.parent?.dispatchEvent(new CustomEvent('innerCanvasReady'))
+            fetchProjectPages()
         })
         return () => h(Container)
     }
