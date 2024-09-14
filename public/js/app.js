@@ -51,6 +51,75 @@ export default defineComponent({
             }
         }
 
+
+        const createStateProps = (stateItem) => {
+            const props = {}
+            if(stateItem.props) {
+                stateItem.props.forEach(item => {
+                    const name = item.name
+                    switch (item.type) {
+                        case 'string':
+                            props[name] = item.defaultValue || ''
+                            break
+                        case 'boolean':
+                            props[name] = !!item.defaultValue || false
+                            break
+                        case 'number':
+                            props[name] = Number(item.defaultValue) || 0
+                            break
+                        case 'object':
+                            props[name] = createStateProps(item)
+                            break
+                        case 'array':
+                            props[name] = []
+                            break
+                        default:
+                            props[name] = null
+                    }
+                })
+            }
+            return props
+        }
+        const createReactiveState = (stateJson) => {
+            const state = reactive({})
+            stateJson && stateJson.forEach(item => {
+                const name = item.name
+                switch (item.type) {
+                    case 'string':
+                        state[name] = item.defaultValue || ''
+                        break
+                    case 'boolean':
+                        state[name] = !!item.defaultValue || false
+                        break
+                    case 'number':
+                        state[name] = Number(item.defaultValue) || 0
+                        break
+                    case 'object':
+                        state[name] = createStateProps(item)
+                        break
+                    case 'array':
+                        state[name] = []
+                        break
+                    default:
+                        state[name] = null
+                }
+            })
+            return state
+        }
+
+        const state = createReactiveState(currentPageSchema.value.state)
+
+        const functionList = {}
+        if (currentPageSchema.value.js && currentPageSchema.value.js.methods) {
+            for (const item of currentPageSchema.value.js.methods) {
+                functionList[item.id] = (...args) => {
+                    return new Function('state', ...item.params, item.code)(state, ...args)
+                }
+            }
+        }
+
+
+
         const render = (schema) => {
             let children = {}
             if(schema.slots) {
@@ -79,8 +148,16 @@ export default defineComponent({
                 children.default = () => defaultSlotChildren
             }
 
+            const schemaProps = schema.props
+            const eventProps = {}
+            if (schema.events) {
+                for (const event of schema.events) {
+                    eventProps[event.eventName] = functionList[event.methodId]
+                }
+            }
             let props = {
-                ...schema.props,
+                ...schemaProps,
+                ...eventProps,
             }
 
             // 如果组件有独立的style属性
