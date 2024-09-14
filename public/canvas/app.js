@@ -90,7 +90,7 @@ export default defineComponent({
         if (currentPageSchema.value.js && currentPageSchema.value.js.methods) {
             for (const item of currentPageSchema.value.js.methods) {
                 functionList[item.id] = (...args) => {
-                    eval(`(${item.code})(state, ...args)`)
+                   return new Function('state', ...item.params, item.code)(state, ...args)
                 }
             }
         }
