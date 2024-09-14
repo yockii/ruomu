@@ -1,6 +1,6 @@
 import { useProjectStore } from './store.js'
 
-const { defineComponent, h, onMounted, getCurrentInstance, ref } = Vue
+const { defineComponent, h, onMounted, getCurrentInstance, reactive } = Vue
 const { storeToRefs } = Pinia
 
 const parseStyles = (styles = '') => {
@@ -29,6 +29,71 @@ export default defineComponent({
         const { appContext } = getCurrentInstance()
         const globalComponents = appContext.components;
 
+        const createStateProps = (stateItem) => {
+            const props = {}
+            if(stateItem.props) {
+                stateItem.props.forEach(item => {
+                    const name = item.name
+                    switch (item.type) {
+                        case 'string':
+                            props[name] = item.defaultValue || ''
+                            break
+                        case 'boolean':
+                            props[name] = !!item.defaultValue || false
+                            break
+                        case 'number':
+                            props[name] = Number(item.defaultValue) || 0
+                            break
+                        case 'object':
+                            props[name] = createStateProps(item)
+                            break
+                        case 'array':
+                            props[name] = []
+                            break
+                        default:
+                            props[name] = null
+                    }
+                })
+            }
+            return props
+        }
+        const createReactiveState = (stateJson) => {
+            const state = reactive({})
+            stateJson && stateJson.forEach(item => {
+                const name = item.name
+                switch (item.type) {
+                    case 'string':
+                        state[name] = item.defaultValue || ''
+                        break
+                    case 'boolean':
+                        state[name] = !!item.defaultValue || false
+                        break
+                    case 'number':
+                        state[name] = Number(item.defaultValue) || 0
+                        break
+                    case 'object':
+                        state[name] = createStateProps(item)
+                        break
+                    case 'array':
+                        state[name] = []
+                        break
+                    default:
+                        state[name] = null
+                }
+            })
+            return state
+        }
+
+        const state = createReactiveState(currentPageSchema.value.state)
+
+        const functionList = {}
+        if (currentPageSchema.value.js && currentPageSchema.value.js.methods) {
+            for (const item of currentPageSchema.value.js.methods) {
+                functionList[item.id] = (...args) => {
+                    eval(`(${item.code})(state, ...args)`)
+                }
+            }
+        }
 
         const render = (schema, slotName) => {
             let children = {}
@@ -89,8 +154,17 @@ export default defineComponent({
                 ]
             }
 
+            const schemaProps = schema.props
+            const eventProps = {}
+            if (schema.events) {
+                for (const event of schema.events) {
+                    eventProps[event.eventName] = functionList[event.methodId]
+                }
+            }
+
             let props = {
-                ...schema.props,
+                ...schemaProps,
+                ...eventProps,
                 'data-component-id': schema.id,
             }
 
@@ -153,6 +227,10 @@ export default defineComponent({
             // innerCanvasReady event
             window.parent?.dispatchEvent(new CustomEvent('innerCanvasReady'))
         })
+
+
+
+
         return () => h(Container)
     }
 })
