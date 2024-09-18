@@ -20,6 +20,28 @@ const parseStyles = (styles = '') => {
         }), {})
 }
 
+const getValueByPathFromState = (obj, path) => {
+    // path = 'state.xxx.xxx'
+    const pathArr = path.split('.')
+    // 要去掉 state.
+    pathArr.shift()
+    return pathArr.reduce((obj, key) => obj && obj[key], obj)
+}
+
+const setValueByPathInState = (obj, path, value) => {
+    const pathArr = path.split('.')
+    // 要去掉 state.
+    pathArr.shift()
+    return pathArr.reduce((obj, key, index) => {
+        if (index === pathArr.length - 1) {
+            obj[key] = value
+        } else {
+            obj[key] = obj[key] || {}
+        }
+        return obj[key]
+    }, obj)
+}
+
 export default defineComponent({
     name: 'App',
     setup() {
@@ -155,6 +177,27 @@ export default defineComponent({
             }
 
             const schemaProps = schema.props
+            if(schema.relatedProps) {
+                // relatedProps: { propName: {name, syncUpdate, varName}}
+                for (const propName in schema.relatedProps) {
+                    const prop = schema.relatedProps[propName]
+                    // const propValue = state[prop.varName]
+                    // prop.varName 是变量名，如：pageId 或者 page.id,但都应该在state中以对象形式存在
+                    const propValue = getValueByPathFromState(state, prop.varName)
+                    // propValue 可能就是false，需要传递
+                    schemaProps[propName] = propValue
+
+                    if (prop.syncUpdate) {
+                        // 实际上就是增加了onUpdate:[propName]的事件
+                        schemaProps[`onUpdate:${propName}`] = function(value) {
+                            // 更新state中的变量
+                            setValueByPathInState(state, prop.varName, value)
+                        }
+                    }
+                }
+            }
+
+
             const eventProps = {}
             if (schema.events) {
                 for (const event of schema.events) {

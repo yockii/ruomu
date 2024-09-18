@@ -1,4 +1,4 @@
-import { useProjectStore } from './store.js'
+import {useProjectStore} from './store.js'
 
 const { defineComponent, h, onMounted, getCurrentInstance, ref } = Vue
 const { storeToRefs } = Pinia
@@ -18,6 +18,28 @@ const parseStyles = (styles = '') => {
             ...styleObj,
             [style[0]]: style[1],
         }), {})
+}
+
+const getValueByPathFromState = (obj, path) => {
+    // path = 'state.xxx.xxx'
+    const pathArr = path.split('.')
+    // 要去掉 state.
+    pathArr.shift()
+    return pathArr.reduce((obj, key) => obj && obj[key], obj)
+}
+
+const setValueByPathInState = (obj, path, value) => {
+    const pathArr = path.split('.')
+    // 要去掉 state.
+    pathArr.shift()
+    return pathArr.reduce((obj, key, index) => {
+        if (index === pathArr.length - 1) {
+            obj[key] = value
+        } else {
+            obj[key] = obj[key] || {}
+        }
+        return obj[key]
+    }, obj)
 }
 
 export default defineComponent({
@@ -149,6 +171,19 @@ export default defineComponent({
             }
 
             const schemaProps = schema.props
+            if(schema.relatedProps) {
+                for (const propName in schema.relatedProps) {
+                    const prop = schema.relatedProps[propName]
+                    schemaProps[propName] = getValueByPathFromState(state, prop.varName)
+
+                    if (prop.syncUpdate) {
+                        schemaProps[`onUpdate:${propName}`] = function(value) {
+                            setValueByPathInState(state, prop.varName, value)
+                        }
+                    }
+                }
+            }
+
             const eventProps = {}
             if (schema.events) {
                 for (const event of schema.events) {
