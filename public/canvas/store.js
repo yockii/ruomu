@@ -254,3 +254,73 @@ actions: {
 },
 persistShare: true,
 })
+
+function fittingValue(value, type) {
+    switch(type) {
+        case 'string':
+            return value || ''
+        case 'boolean':
+            return !!value || false
+        case 'number':
+            return Number(value) || 0
+        case 'object':
+            return value || {}
+    }
+    return value
+}
+
+export const useCommonStore = defineStore('common', {
+    state: () => ({
+        persistVariables: [],
+    }),
+    actions: {
+        addPersistVariable(name, storage) {
+            if(this.persistVariables.some(item => item.name === name)) {
+                // 覆盖
+                this.persistVariables.forEach(item => {
+                    if(item.name === name) {
+                        item.storage = storage
+                    }
+                })
+            } else {
+                this.persistVariables.push({
+                    name,
+                    storage
+                })
+            }
+        },
+        registerVariable({name, defaultValue, type, props, storage}) {
+            let v
+            switch(type) {
+                case 'string':
+                    v = defaultValue || ''
+                    break
+                case 'boolean':
+                    v = (defaultValue && !!JSON.parse(defaultValue)) || false
+                    break
+                case 'number':
+                    v = Number(defaultValue) || 0
+                    break
+                case 'object':
+                    v = {}
+                    // props []
+                    for(let p of props) {
+                        v[p.name] = fittingValue(p.defaultValue, p.type)
+                    }
+                    break
+                default:
+                    v = null
+            }
+            this.$state[name] = v
+
+            if(storage) {
+               this.addPersistVariable(name, storage)
+            }
+        }
+    }
+}, {
+    persistVariables: [{
+        name: 'aaa',
+        storage: 'sessionStorage'
+    }] // 持久化变量 {name,storage}
+})

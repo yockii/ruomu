@@ -253,3 +253,8 @@ export const useProjectStore = defineStore("project", {
         }
     },
 })
+
+export const useNonePersistStore = defineStore("common", {})
+
+export const useSessionStore = defineStore("session", {
+})

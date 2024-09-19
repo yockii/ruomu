@@ -1,4 +1,4 @@
-import { useProjectStore } from './store.js'
+import {useCommonStore, useProjectStore} from './store.js'
 
 const { defineComponent, h, onMounted, getCurrentInstance, reactive } = Vue
 const { storeToRefs } = Pinia
@@ -20,11 +20,12 @@ const parseStyles = (styles = '') => {
         }), {})
 }
 
-const getValueByPathFromState = (obj, path) => {
+const getValueByPathFromState = (state, store, path) => {
     // path = 'state.xxx.xxx'
     const pathArr = path.split('.')
     // 要去掉 state.
-    pathArr.shift()
+    const where = pathArr.shift()
+    const obj = where === 'state' ? state : store.$state
     return pathArr.reduce((obj, key) => obj && obj[key], obj)
 }
 
@@ -46,10 +47,19 @@ export default defineComponent({
     name: 'App',
     setup() {
         const projectStore = useProjectStore()
-        const { currentPageSchema } = storeToRefs(projectStore)
+        const { project, currentPageSchema } = storeToRefs(projectStore)
+
+        const commonStore = useCommonStore()
 
         const { appContext } = getCurrentInstance()
         const globalComponents = appContext.components;
+
+        // 处理项目级别store
+        if(project.value.store) {
+            project.value.store.forEach(item => {
+                commonStore.registerVariable(item)
+            })
+        }
 
         const createStateProps = (stateItem) => {
             const props = {}
@@ -112,7 +122,11 @@ export default defineComponent({
         if (currentPageSchema.value.js && currentPageSchema.value.js.methods) {
             for (const item of currentPageSchema.value.js.methods) {
                 functionList[item.id] = (...args) => {
-                   return new Function('state', ...item.params, item.code)(state, ...args)
+                   // return new Function('state', 'store', ...item.params, item.code)(state, commonStore, ...args)
+                    const fn = (state, store, ...params) => {
+                        eval(item.code)
+                    }
+                    fn(state, commonStore.$state, ...args)
                 }
             }
         }
@@ -183,9 +197,23 @@ export default defineComponent({
                     const prop = schema.relatedProps[propName]
                     // const propValue = state[prop.varName]
                     // prop.varName 是变量名，如：pageId 或者 page.id,但都应该在state中以对象形式存在
-                    const propValue = getValueByPathFromState(state, prop.varName)
-                    // propValue 可能就是false，需要传递
-                    schemaProps[propName] = propValue
+
+                    let v
+                    let varName = prop.varName
+
+                    // 判断是否有 {{符号
+                    if (varName.indexOf('{{') > -1) {
+                        // 使用了模板变量，如：{{pageId}}，则需要提取出每个{{}}包裹的变量
+                        v = varName.replace(/\{\{(.*?)}}/g, (match, p1) => {
+                            // p1是匹配到的变量名，如pageId
+                            // 获取变量的值
+                            v = getValueByPathFromState(state, commonStore, p1)
+                            return v
+                        })
+                    } else {
+                        v = getValueByPathFromState(state, commonStore, varName)
+                    }
+                    schemaProps[propName] = v
 
                     if (prop.syncUpdate) {
                         // 实际上就是增加了onUpdate:[propName]的事件
