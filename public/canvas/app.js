@@ -115,18 +115,48 @@ export default defineComponent({
             })
             return state
         }
-
         const state = createReactiveState(currentPageSchema.value.state)
+
+        const apiList = {}
+        if (project.value.api && project.value.api.apiList) {
+            const apiInfo = project.value.api
+            // preAction/postAction 需要注入到axios拦截器中
+            axios.interceptors.request.use(config => {
+                if (apiInfo.preAction) {
+                    // preAction是字符串
+                    return new Function('config', apiInfo.preAction)(config)
+                }
+                return config
+            })
+            axios.interceptors.response.use(response => {
+                if (apiInfo.postAction) {
+                    // postAction是字符串
+                    return new Function('response', apiInfo.postAction)(response)
+                }
+                return response
+            })
+
+            for (const item of apiInfo.apiList) {
+                apiList[item.name] = (config) => {
+                    config.url = item.url
+                    config.method = item.method
+                    return axios.request(config)
+                }
+            }
+        }
+
 
         const functionList = {}
         if (currentPageSchema.value.js && currentPageSchema.value.js.methods) {
             for (const item of currentPageSchema.value.js.methods) {
                 functionList[item.id] = (...args) => {
                    // return new Function('state', 'store', ...item.params, item.code)(state, commonStore, ...args)
-                    const fn = (state, store, ...params) => {
-                        eval(item.code)
+                    const fn = (state, store, api, ...params) => {
+                        // eval(item.code)
+                        const script = `(function() {${item.code}})();`
+                        eval(script)
                     }
-                    fn(state, commonStore.$state, ...args)
+                    fn(state, commonStore.$state, apiList, ...args)
                 }
             }
         }
@@ -302,6 +332,6 @@ export default defineComponent({
 
 
 
-        return () => h(Container)
+        return () => h(Container, {state})
     }
 })
