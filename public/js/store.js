@@ -310,6 +310,12 @@ export const useCommonStore = defineStore('common', {
                 default:
                     v = null
             }
+
+            // 如果存在，不重复注册
+            if(this.$state[name] !== undefined) {
+                return
+            }
+
             this.$state[name] = v
 
             if(storage) {

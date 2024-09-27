@@ -1,5 +1,5 @@
 import {fetchProjectInfo} from './util.js'
-const { defineComponent, h, onMounted, getCurrentInstance, ref } = Vue
+const { defineComponent, h, onMounted } = Vue
 const {RouterView} = VueRouter
 
 

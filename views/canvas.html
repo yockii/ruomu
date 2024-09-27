@@ -49,19 +49,6 @@
             {{- end }}
         {{- end }}
 
-        const routes = [
-            {
-                path: '/:route',
-                component: Container
-            }
-        ]
-        const {createMemoryHistory, createRouter} = VueRouter
-        const router = createRouter({
-            history: createMemoryHistory(),
-            routes
-        })
-        app.use(router)
-
         app.mount('#app')
     </script>
 </body>

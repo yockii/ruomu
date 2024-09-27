@@ -22,7 +22,15 @@
         const project = {
             id: projectId,
             name: "{{ .instance.Name }}",
-            homePageId: "{{ .instance.HomePageID }}"
+            homePageId: "{{ .instance.HomePageID }}",
+        {{ if .frontend }}
+            {{ if .frontend.StoreJson }}
+            store: {{ .frontend.StoreJson | jsVar}},
+            {{ end }}
+            {{ if .frontend.ApiJson }}
+            api: {{ .frontend.ApiJson | jsVar }}
+            {{ end }}
+        {{ end }}
         };
         const pages = [
             {{ range $page := .pages }}

@@ -150,11 +150,10 @@ export default defineComponent({
         if (currentPageSchema.value.js && currentPageSchema.value.js.methods) {
             for (const item of currentPageSchema.value.js.methods) {
                 functionList[item.id] = (...args) => {
-                   // return new Function('state', 'store', ...item.params, item.code)(state, commonStore, ...args)
                     const fn = (state, store, api, ...params) => {
-                        // eval(item.code)
-                        const script = `(function() {${item.code}})();`
-                        eval(script)
+                        // 配置阶段不执行代码
+                        // const script = `(function() {${item.code}})();`
+                        // eval(script)
                     }
                     fn(state, commonStore.$state, apiList, ...args)
                 }

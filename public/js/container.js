@@ -1,5 +1,6 @@
 import {useCommonStore, useProjectStore} from './store.js'
 import {parseStyles, getValueByPathFromState, setValueByPathInState} from './util.js'
+import router from "./router.js";
 
 const { defineComponent, h, onMounted, getCurrentInstance, reactive } = Vue
 const { storeToRefs } = Pinia
@@ -22,6 +23,10 @@ export default defineComponent({
                 commonStore.registerVariable(item)
             })
         }
+        // 处理项目的api
+        if(project.value.api) {
+
+        }
 
         const createStateProps = (stateItem) => {
             const props = {}
@@ -33,7 +38,7 @@ export default defineComponent({
                             props[name] = item.defaultValue || ''
                             break
                         case 'boolean':
-                            props[name] = !!item.defaultValue || false
+                            props[name] = item.defaultValue === 'true';
                             break
                         case 'number':
                             props[name] = Number(item.defaultValue) || 0
@@ -113,12 +118,12 @@ export default defineComponent({
             for (const item of currentPageSchema.value.js.methods) {
                 functionList[item.id] = (...args) => {
                     // return new Function('state', 'store', ...item.params, item.code)(state, commonStore, ...args)
-                    const fn = (state, store, api, ...params) => {
+                    const fn = (state, store, api, router, ...params) => {
                         // eval(item.code)
                         const script = `(function() {${item.code}})();`
                         eval(script)
                     }
-                    fn(state, commonStore.$state, apiList, ...args)
+                    fn(state, commonStore.$state, apiList, router, ...args)
                 }
             }
         }
