@@ -15,12 +15,29 @@ const piniaStorePlugin = () => {
 
         // 恢复状态
         const restoreState = () => {
-            persistVariables.forEach(item => {
-                const { name, storage } = item;
-                const storageObj = storage === 'sessionStorage' ? sessionStorage : localStorage;
-                const value = storageObj.getItem(name);
-                if (value) {
-                    store.$state[generateKey(name)] = JSON.parse(value)
+            // persistVariables.forEach(item => {
+            //     const { name, storage } = item;
+            //     const storageObj = storage === 'sessionStorage' ? sessionStorage : localStorage;
+            //     const value = storageObj.getItem(name);
+            //     if (value) {
+            //         store.$state[generateKey(name)] = JSON.parse(value)
+            //     }
+            // })
+            // 此时还未完全初始化，可能persistVariables还未初始化，为空的状态，因此直接读取sessionStorage和localStorage的所有数据进行恢复
+            const keys = Object.keys(localStorage).concat(Object.keys(sessionStorage));
+            keys.forEach(key => {
+                if (key.startsWith(keyPrefix)) {
+                    const value = localStorage.getItem(key) || sessionStorage.getItem(key);
+                    if (value) {
+                        // 去掉开头的keyPrefix@
+                        let k = key.slice(keyPrefix.length + 1)
+                        const ks = k.split('__')
+                        const storeId = ks[0]
+                        const name = ks[1]
+                        if (storeId === store.$id) {
+                            store.$state[name] = JSON.parse(value)
+                        }
+                    }
                 }
             })
         }

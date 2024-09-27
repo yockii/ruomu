@@ -313,11 +313,9 @@ export const useCommonStore = defineStore('common', {
 
             // 如果存在，不重复注册
             if(this.$state[name] !== undefined) {
-                return
+            } else {
+                this.$state[name] = v
             }
-
-            this.$state[name] = v
-
             if(storage) {
                 this.addPersistVariable(name, storage)
             }
