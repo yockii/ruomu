@@ -1,50 +1,12 @@
 import {useCommonStore, useProjectStore} from './store.js'
+import {parseStyles, getValueByPathFromState, setValueByPathInState} from './util.js'
 
 const { defineComponent, h, onMounted, getCurrentInstance, reactive } = Vue
 const { storeToRefs } = Pinia
-
-const parseStyles = (styles = '') => {
-    return styles
-        .split(';')
-        .filter((style) => style.split(':').length === 2)
-        .map((style) => {
-            const [key, value] = style.split(':')
-            return [
-                key.trim().replace(/-./g, (s) => s.charAt(1).toUpperCase()),
-                value.trim(),
-            ]
-        })
-        .reduce((styleObj, style) => ({
-            ...styleObj,
-            [style[0]]: style[1],
-        }), {})
-}
-
-const getValueByPathFromState = (state, store, path) => {
-    // path = 'state.xxx.xxx'
-    const pathArr = path.split('.')
-    // 要去掉 state.
-    const where = pathArr.shift()
-    const obj = where === 'state' ? state : store.$state
-    return pathArr.reduce((obj, key) => obj && obj[key], obj)
-}
-
-const setValueByPathInState = (obj, path, value) => {
-    const pathArr = path.split('.')
-    // 要去掉 state.
-    pathArr.shift()
-    return pathArr.reduce((obj, key, index) => {
-        if (index === pathArr.length - 1) {
-            obj[key] = value
-        } else {
-            obj[key] = obj[key] || {}
-        }
-        return obj[key]
-    }, obj)
-}
+const { useRoute } = VueRouter
 
 export default defineComponent({
-    name: 'App',
+    name: 'Container',
     setup() {
         const projectStore = useProjectStore()
         const { project, currentPageSchema } = storeToRefs(projectStore)
@@ -150,7 +112,7 @@ export default defineComponent({
         if (currentPageSchema.value.js && currentPageSchema.value.js.methods) {
             for (const item of currentPageSchema.value.js.methods) {
                 functionList[item.id] = (...args) => {
-                   // return new Function('state', 'store', ...item.params, item.code)(state, commonStore, ...args)
+                    // return new Function('state', 'store', ...item.params, item.code)(state, commonStore, ...args)
                     const fn = (state, store, api, ...params) => {
                         // eval(item.code)
                         const script = `(function() {${item.code}})();`
@@ -326,12 +288,10 @@ export default defineComponent({
         }
 
         onMounted(() => {
-            // innerCanvasReady event
-            window.parent?.dispatchEvent(new CustomEvent('innerCanvasReady'))
+            const route = useRoute()
+            const pageRoute = route.params.pageRoute
+            console.log(pageRoute)
         })
-
-
-
 
         return () => h(Container, {state, projectStore})
     }

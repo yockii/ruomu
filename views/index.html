@@ -6,6 +6,7 @@
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/vue-demi"></script>
     <script src="https://unpkg.com/pinia"></script>
+    <script src="https://unpkg.com/vue-router@4"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <!-- 循环libList -->
     {{ range $lib := .libList }}
@@ -17,17 +18,45 @@
     {{ end }}
     {{ end }}
     <script>
-        const projectId = "{{ .instance.ID }}"
+        const projectId = "{{ .instance.ID }}";
+        const project = {
+            id: projectId,
+            name: "{{ .instance.Name }}",
+            homePageId: "{{ .instance.HomePageID }}"
+        };
+        const pages = [
+            {{ range $page := .pages }}
+        {
+            id: "{{ $page.ID }}",
+            name: "{{ $page.Name }}",
+            route: "{{ $page.Route }}",
+            schema: {{ $page.Schema | jsVar }}
+        },
+        {{ end }}
+        ];
     </script>
+
+    <style>
+        html, body, #app {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
 </head>
 <body>
 <div id="app">
 </div>
 <script type="module">
     import App from './js/app.js'
+    import piniaStorePlugin from "./js/piniaStore.js";
+    import router from "./js/router.js";
+    import {useProjectStore} from "./js/store.js";
 
     const { createPinia } = Pinia;
     const pinia = createPinia()
+    pinia.use(piniaStorePlugin())
 
     const { createApp } = Vue;
 
@@ -38,6 +67,13 @@
     app.use({{ $lib.PluginUseName | jsVar }})
     {{- end }}
     {{- end }}
+
+    const projectStore = useProjectStore()
+    projectStore.project= project
+    projectStore.pages = pages
+
+    app.use(router)
+
     app.mount('#app')
 </script>
 </body>
