@@ -1,6 +1,74 @@
 # ruomu
 核心功能，用于快速应用开发，以【配置表单->生成代码->编译可执行程序】的方式完成应用开发，并支持独立程序部署。
 
+## 使用
+目前已完成若木主程序（微核），可独立部署，以插件方式接入。
+插件已完成：用户中心、界面中心。
+
+需要数据库（可以用sqlite、mysql、pgsql）、redis（推荐直接docker启动个）环境。
+
+将ruomu程序放在某文件夹下，同级文件夹下，创建plugins文件夹，将插件放入plugins文件夹下；
+配置文件在ruomu程序同级目录下的conf文件夹下的config.toml（新建，参考以下配置信息）：
+```toml
+modulename = 'ruomu'
+usertokenexpire = 86400
+
+[database]
+db = 'ruomu'
+#driver = 'mysql'
+driver = 'sqlite'
+#host = '127.0.0.1'
+host = 'ruomu.db'
+#password = 'root'
+#port = 3306
+prefix = 't_'
+#showsql = true
+#user = 'root'
+
+[logger]
+backups = 7
+compress = false
+dir = 'logs'
+level = 'debug'
+maxage = 30
+maxsize = 100
+
+[project]
+id = 28010609669849088 # 这个id是界面中心作为界面主项目的id，在执行插件初始化后自动写入
+
+[redis]
+app = 'ruomu'
+host = '127.0.0.1'
+password = '123456' # 无密码可留空
+port = 6379
+
+[server]
+port = 8888 # 提供服务的端口
+
+```
+
+插件初始化：
+
+插件能够自动建表和预置数据，需要在ruomu文件夹下执行
+```shell
+# linux下：
+./plugins/ruomu-uc
+./plugins/ruomu-ui
+# windows下：
+./plugins/ruomu-uc.exe
+./plugins/ruomu-ui.exe
+```
+执行完毕后，即可运行ruomu主程序。
+```shell
+# linux下：
+./ruomu
+# windows下：
+./ruomu.exe
+```
+
+
+
+
 ## 功能
 - [ ] 用户、角色、权限管理
 - [ ] 多租户管理
