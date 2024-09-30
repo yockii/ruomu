@@ -58,7 +58,7 @@ port = 8888 # 提供服务的端口
 ./plugins/ruomu-uc.exe
 ./plugins/ruomu-ui.exe
 ```
-执行完毕后，即可运行ruomu主程序。
+执行完毕后，将views、public文件夹放到ruomu同级文件夹中，即可运行ruomu主程序。
 ```shell
 # linux下：
 ./ruomu
