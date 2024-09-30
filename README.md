@@ -7,6 +7,8 @@
 
 需要数据库（可以用sqlite、mysql、pgsql）、redis（推荐直接docker启动个）环境。
 
+在[release](https://github.com/yockii/ruomu/releases)中下载对应的版本。
+
 将ruomu程序放在某文件夹下，同级文件夹下，创建plugins文件夹，将插件放入plugins文件夹下；
 配置文件在ruomu程序同级目录下的conf文件夹下的config.toml（新建，参考以下配置信息）：
 ```toml
@@ -66,6 +68,10 @@ port = 8888 # 提供服务的端口
 ./ruomu.exe
 ```
 
+## 插件下载地址
+[用户中心](https://github.com/yockii/ruomu-uc/releases)
+
+[界面中心](https://github.com/yockii/ruomu-ui/releases)
 
 
 
