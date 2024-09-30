@@ -82,7 +82,7 @@ export default defineComponent({
                             props[name] = item.defaultValue || ''
                             break
                         case 'boolean':
-                            props[name] = !!item.defaultValue || false
+                            props[name] = !!(item.defaultValue && item.defaultValue.toLowerCase() === 'true')
                             break
                         case 'number':
                             props[name] = Number(item.defaultValue) || 0
@@ -109,7 +109,7 @@ export default defineComponent({
                         state[name] = item.defaultValue || ''
                         break
                     case 'boolean':
-                        state[name] = !!item.defaultValue || false
+                        state[name] = !!(item.defaultValue && item.defaultValue.toLowerCase() === 'true')
                         break
                     case 'number':
                         state[name] = Number(item.defaultValue) || 0
@@ -301,6 +301,17 @@ export default defineComponent({
                 ...schemaProps,
                 ...eventProps,
                 'data-component-id': schema.id,
+            }
+
+            if(!isDebug) {
+                let visibleProperty = 'show'
+                if(schema.visibleProperty) {
+                    visibleProperty = schema.visibleProperty
+                }
+                if(!props[visibleProperty]) {
+                    visibleProperty = 'visible'
+                }
+                props[visibleProperty] && (props[visibleProperty] = !schema.invisible)
             }
 
             if (slotName) {
