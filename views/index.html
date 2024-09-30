@@ -28,7 +28,10 @@
             store: {{ .frontend.StoreJson | jsVar}},
             {{ end }}
             {{ if .frontend.ApiJson }}
-            api: {{ .frontend.ApiJson | jsVar }}
+            api: {{ .frontend.ApiJson | jsVar }},
+            {{ end }}
+            {{ if .frontend.RouteGuardJson }}
+            routeGuard: {{ .frontend.RouteGuardJson | jsVar }}
             {{ end }}
         {{ end }}
         };
@@ -61,6 +64,7 @@
     import piniaStorePlugin from "./js/piniaStore.js";
     import router from "./js/router.js";
     import {useProjectStore} from "./js/store.js";
+    import {initRouterGuard} from "./js/util.js";
 
     const { createPinia } = Pinia;
     const pinia = createPinia()
@@ -79,6 +83,7 @@
     const projectStore = useProjectStore()
     projectStore.project= project
     projectStore.pages = pages
+    initRouterGuard(project)
 
     app.use(router)
 

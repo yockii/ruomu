@@ -1,6 +1,6 @@
 import Container from "./container.js";
 import {useProjectStore} from './store.js'
-import {fetchPageSchema} from "./util.js";
+import {fetchPageSchema, beforeEachFuncList} from "./util.js";
 const {createWebHashHistory, createRouter} = VueRouter
 
 const routes = [
@@ -17,6 +17,7 @@ const routes = [
         component: Container
     }
 ]
+
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -39,7 +40,14 @@ router.beforeEach(async (to, from, next) => {
             await fetchPageSchema(page.id)
         }
         projectStore.currentPageSchema = page.schema
-        next()
+
+        if(beforeEachFuncList.length > 0 ) {
+            const fn = beforeEachFuncList[0]
+            // to, from, next 传递进去
+            fn(to, from, next)
+        } else {
+            next()
+        }
         return
     }
     next("/404")
@@ -54,5 +62,7 @@ router.afterEach((to, from) => {
         window.location.reload()
     }
 })
+
+
 
 export default router

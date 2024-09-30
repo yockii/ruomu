@@ -126,12 +126,12 @@ export default defineComponent({
         if (currentPageSchema.value.js && currentPageSchema.value.js.methods) {
             for (const item of currentPageSchema.value.js.methods) {
                 const executor = (...args) => {
-                    const fn = (state, store, api, router, ...params) => {
+                    const fn = (state, store, api, router, fx, ...params) => {
                         // eval(item.code)
                         const script = `(function() {${item.code}})();`
                         eval(script)
                     }
-                    fn(state, commonStore.$state, apiList, router, ...args)
+                    fn(state, commonStore.$state, apiList, router, fxList, ...args)
                 }
 
 

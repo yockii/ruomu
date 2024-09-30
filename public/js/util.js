@@ -1,4 +1,27 @@
-import {useProjectStore} from './store.js'
+import {useProjectStore, useCommonStore} from './store.js'
+
+const beforeEachFuncList = []
+
+const initRouterGuard = (project) => {
+    const commonStore = useCommonStore()
+    const fl = []
+    if (project.routeGuard) {
+        if (project.routeGuard.beforeEnter) {
+            const code = project.routeGuard.beforeEnter
+            const fn = (to, from, next) => {
+                const f = (store, to, from, next) => {
+                    const script = `(function(){${code}})();`
+                    eval(script)
+                }
+                f(commonStore.$state, to, from, next)
+            }
+            fl.push(fn)
+        }
+    }
+    // 清空，重新赋值
+    beforeEachFuncList.length = 0
+    beforeEachFuncList.push(...fl)
+}
 
 const fetchProjectInfo = async () => {
     try {
@@ -92,5 +115,7 @@ export {
     fetchPageSchema,
     parseStyles,
     getValueByPathFromState,
-    setValueByPathInState
+    setValueByPathInState,
+    beforeEachFuncList,
+    initRouterGuard
 }
