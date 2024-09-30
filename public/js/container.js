@@ -2,7 +2,7 @@ import {useCommonStore, useProjectStore} from './store.js'
 import {parseStyles, getValueByPathFromState, setValueByPathInState} from './util.js'
 import router from "./router.js";
 
-const { defineComponent, h, onMounted, getCurrentInstance, reactive } = Vue
+const { defineComponent, h, onMounted, getCurrentInstance, reactive, onUnmounted, onUpdated, onBeforeMount, onBeforeUnmount } = Vue
 const { storeToRefs } = Pinia
 const { useRoute } = VueRouter
 
@@ -85,20 +85,30 @@ export default defineComponent({
         const state = createReactiveState(currentPageSchema.value.state)
 
         const apiList = {}
+        const functionList = {}
+        const fxList = {}
         if (project.value.api && project.value.api.apiList) {
             const apiInfo = project.value.api
             // preAction/postAction 需要注入到axios拦截器中
             axios.interceptors.request.use(config => {
                 if (apiInfo.preAction) {
                     // preAction是字符串
-                    return new Function('config', apiInfo.preAction)(config)
+                    // return new Function('config', apiInfo.preAction)(config)
+                    const fn = (state, store, api, route, fx, config) => {
+                        const script = `(function(){${apiInfo.preAction}})();`
+                        eval(script)
+                    }
+                    fn(state, commonStore.$state, apiList, useRoute(), fxList, config)
+
+                    return config
                 }
                 return config
             })
             axios.interceptors.response.use(response => {
                 if (apiInfo.postAction) {
                     // postAction是字符串
-                    return new Function('response', apiInfo.postAction)(response)
+                    // return new Function('response', apiInfo.postAction)(response)
+                    return new Function("state", "store", "api", "route", "fx", 'response', apiInfo.postAction)(state, commonStore.$state, apiList, useRoute(), fxList, response)
                 }
                 return response
             })
@@ -113,11 +123,9 @@ export default defineComponent({
         }
 
 
-        const functionList = {}
         if (currentPageSchema.value.js && currentPageSchema.value.js.methods) {
             for (const item of currentPageSchema.value.js.methods) {
-                functionList[item.id] = (...args) => {
-                    // return new Function('state', 'store', ...item.params, item.code)(state, commonStore, ...args)
+                const executor = (...args) => {
                     const fn = (state, store, api, router, ...params) => {
                         // eval(item.code)
                         const script = `(function() {${item.code}})();`
@@ -125,10 +133,24 @@ export default defineComponent({
                     }
                     fn(state, commonStore.$state, apiList, router, ...args)
                 }
+
+
+                functionList[item.id] = executor
+                fxList[item.name] = executor
             }
         }
 
-        const render = (schema, slotName) => {
+
+        const render = (n, p, c) => {
+            const component = globalComponents[n]
+            if(component) {
+                return h(component, p, c)
+            } else {
+                return h(n,p,c)
+            }
+        }
+
+        const renderSchema = (schema, slotName) => {
             let children = {}
             if(schema.slots) {
                 // 有插槽，则不是children数组的形式，而是插槽键值对的形式
@@ -140,7 +162,7 @@ export default defineComponent({
                             slotChildren.push(slot.children)
                         } else {
                             for (const node of slot.children) {
-                                slotChildren.push(render(node, slot.name))
+                                slotChildren.push(renderSchema(node, slot.name))
                             }
                         }
                     }
@@ -151,7 +173,7 @@ export default defineComponent({
                 const defaultSlotChildren = []
                 if (schema.children && schema.children.length > 0) {
                     for (const node of schema.children) {
-                        defaultSlotChildren.push(render(node))
+                        defaultSlotChildren.push(renderSchema(node))
                     }
                 }
                 children.default = () => defaultSlotChildren
@@ -279,7 +301,7 @@ export default defineComponent({
             const schema = projectStore.currentPageSchema
             if (schema && schema.children) {
                 for (const node of schema.children) {
-                    children.push(render(node))
+                    children.push(renderSchema(node))
                 }
             }
             const props = {}
@@ -295,8 +317,64 @@ export default defineComponent({
         onMounted(() => {
             const route = useRoute()
             const pageRoute = route.params.pageRoute
-            console.log(pageRoute)
+
+
+            if(currentPageSchema.value.js && currentPageSchema.value.js.onMounted) {
+                const code = currentPageSchema.value.js.onMounted
+                // onMounted 是字符串代码,如果有则执行
+                const fn = (state, store, api, route, fx) => {
+                    const script = `(function() {${code}})();`
+                    eval(script)
+                }
+                fn(state, commonStore.$state, apiList, route, fxList)
+            }
         })
+
+        // 其他生命周期代码如果有，则准备执行
+        if(currentPageSchema.value.js) {
+            // onUnmounted, onUpdated, onBeforeMount, onBeforeUnmount
+            if(currentPageSchema.value.js.onUnmounted) {
+                onUnmounted(() => {
+                    const code = currentPageSchema.value.js.onUnmounted
+                    const fn = (state, store, api, route, fx) => {
+                        const script = `(function() {${code}})();`
+                        eval(script)
+                    }
+                    fn(state, commonStore.$state, apiList, useRoute(), fxList)
+                })
+            }
+            if(currentPageSchema.value.js.onUpdated) {
+                onUpdated(() => {
+                    const code = currentPageSchema.value.js.onUpdated
+                    const fn = (state, store, api, route, fx) => {
+                        const script = `(function() {${code}})();`
+                        eval(script)
+                    }
+                    fn(state, commonStore.$state, apiList, route, fxList)
+                })
+            }
+            if(currentPageSchema.value.js.onBeforeMount) {
+                onBeforeMount(() => {
+                    const code = currentPageSchema.value.js.onBeforeMount
+                    const fn = (state, store, api, route, fx) => {
+                        const script = `(function() {${code}})();`
+                        eval(script)
+                    }
+                    fn(state, commonStore.$state, apiList, useRoute(), fxList)
+                })
+            }
+            if(currentPageSchema.value.js.onBeforeUnmount) {
+                onBeforeUnmount(() => {
+                    const code = currentPageSchema.value.js.onBeforeUnmount
+                    const fn = (state, store, api, route, fx) => {
+                        const script = `(function() {${code}})();`
+                        eval(script)
+                    }
+                    fn(state, commonStore.$state, apiList, useRoute(), fxList)
+                })
+            }
+        }
+
 
         return () => h(Container, {state, projectStore})
     }

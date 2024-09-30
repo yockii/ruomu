@@ -45,4 +45,14 @@ router.beforeEach(async (to, from, next) => {
     next("/404")
 })
 
+router.afterEach((to, from) => {
+    const currentPage = sessionStorage.getItem("currentPage")
+
+    if (!currentPage || currentPage !== to.path) {
+        sessionStorage.setItem("currentPage", to.path)
+        // 刷新页面
+        window.location.reload()
+    }
+})
+
 export default router
