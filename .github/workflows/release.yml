@@ -22,7 +22,7 @@ jobs:
         with:
           go-version: stable
       - name: Install Upx
-        uses: crazy-max/ghaction-upx@v2
+        uses: crazy-max/ghaction-upx@v3
         with:
           install-only: true
       - name: Build
