@@ -114,7 +114,7 @@ export default defineComponent({
             })
 
             for (const item of apiInfo.apiList) {
-                apiList[item.name] = (config) => {
+                apiList[item.name] = (config = {}) => {
                     config.url = item.url
                     config.method = item.method
                     return axios.request(config)
